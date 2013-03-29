@@ -18,7 +18,7 @@ class ThugCtrl():
     """ Thug remote control
     """
 
-    def __init__(self, configfile, extensive = False, threshold = 0, referer = None, proxy = None, timeout = None):
+    def __init__(self, configfile="config.ini", extensive = False, threshold = 0, referer = None, proxy = None, timeout = None):
         """ Init Thugd using config file
         """
 
