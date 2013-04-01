@@ -52,7 +52,7 @@ class Thugd():
         """ Execute thug to process a job
         """
         print "job" + str(job)
-        command = ["python", "thug.py", "-t", str(job["threshold"])]
+        command = ["python", "thug.py", "-t", str(job["threshold"]), "-u", "win7ie90", "-J", "1.7.0.15"]
         if job["extensive"]:
             command.append("-E")
         if job["timeout"]:
