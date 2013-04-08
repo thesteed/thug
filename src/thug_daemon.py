@@ -68,10 +68,11 @@ class Thugd():
         print command
         pathname = None
         for line in self.runProcess(command):
-            if line.startswith("["):
-                print line,
+#             if line.startswith("["):
+#                 print line,
             if line.find("] Saving log analysis at ") >= 0:
                 pathname = line.split(" ")[-1].strip()
+            print line
         
         rpath = '/'.join(pathname.split('/')[-2:]) if pathname else None
         res = {"id": job["id"],
