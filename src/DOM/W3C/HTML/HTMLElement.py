@@ -4,9 +4,12 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+    from io import StringIO
+except ImportError:
+    try:
+        from cStringIO import StringIO
+    except ImportError:
+        from StringIO import StringIO
 
 import bs4 as BeautifulSoup
 import logging
@@ -33,7 +36,7 @@ class HTMLElement(Element, ElementCSSInlineStyle):
         html = StringIO()
 
         for tag in self.tag.contents:
-            html.write(str(tag))
+            html.write(unicode(tag))
 
         return html.getvalue()
 

@@ -19,7 +19,7 @@
 import os
 import sched
 import time
-import new
+#import new
 import logging
 import PyV8
 import traceback
@@ -27,10 +27,11 @@ import hashlib
 import pefile
 import numbers
 import datetime
-import jsbeautifier
+import collections
+from . import jsbeautifier
 import bs4 as BeautifulSoup
-import W3C.w3c as w3c
-
+from .W3C import *
+#import W3C.w3c as w3c
 from .Navigator import Navigator
 from .Location import Location
 from .Screen import Screen
@@ -141,7 +142,7 @@ class Window(PyV8.JSClass):
 
         prop = self.__dict__.setdefault('__properties__', {}).get(name, None)
 
-        if prop and callable(prop[0]):
+        if prop and isinstance(prop[0], collections.Callable):
             return prop[0]()
 
         if name in ('__members__', '__methods__'):
@@ -161,7 +162,8 @@ class Window(PyV8.JSClass):
                     break
 
             if _method is None:
-                _method = new.instancemethod(symbol, self, Window)
+                #_method = new.instancemethod(symbol, self, Window)
+                _method = symbol.__get__(self, Window)
 
             setattr(self, name, _method)
             self.context.locals[name] = _method
@@ -1138,7 +1140,7 @@ class WindowTest(unittest.TestCase):
         self.win.fireOnloadEvents()
 
         tag = self.doc.getElementById('hello')
-        self.assertEquals(u'P', tag.nodeName)
+        self.assertEquals('P', tag.nodeName)
         self.assertEquals(1, self.win.innerWidth)
 
     def testSetInterval(self):

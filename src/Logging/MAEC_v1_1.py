@@ -6,7 +6,12 @@
 
 import sys
 import getopt
-from string import lower as str_lower
+
+try:
+    from string import lowercase as str_lower
+except ImportError:
+    str_lower = str.lower
+
 from xml.dom import minidom
 from xml.dom import Node
 
@@ -19,7 +24,7 @@ from xml.dom import Node
 
 try:
     from generatedssuper import GeneratedsSuper
-except ImportError, exp:
+except ImportError as exp:
 
     class GeneratedsSuper(object):
         def format_string(self, input_data, input_name=''):
@@ -305,7 +310,7 @@ class BundleType(GeneratedsSuper):
         if attrs.get('schema_version'):
             try:
                 self.schema_version = float(attrs.get('schema_version').value)
-            except ValueError, exp:
+            except ValueError as exp:
                 raise ValueError('Bad float/double attribute (schema_version): %s' % exp)
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.ELEMENT_NODE and \
@@ -1763,7 +1768,7 @@ class BehaviorType(GeneratedsSuper):
         if attrs.get('ordinal_position'):
             try:
                 self.ordinal_position = int(attrs.get('ordinal_position').value)
-            except ValueError, exp:
+            except ValueError as exp:
                 raise ValueError('Bad integer attribute (ordinal_position): %s' % exp)
             if self.ordinal_position <= 0:
                 raise ValueError('Invalid PositiveInteger (ordinal_position)')
@@ -2791,7 +2796,7 @@ class ActionType(GeneratedsSuper):
         if attrs.get('ordinal_position'):
             try:
                 self.ordinal_position = int(attrs.get('ordinal_position').value)
-            except ValueError, exp:
+            except ValueError as exp:
                 raise ValueError('Bad integer attribute (ordinal_position): %s' % exp)
             if self.ordinal_position <= 0:
                 raise ValueError('Invalid PositiveInteger (ordinal_position)')
@@ -4280,7 +4285,7 @@ class File_System_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Maximum_Instances): %s' % exp)
                 self.Maximum_Instances = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -4625,7 +4630,7 @@ class TrID_Type(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     fval_ = float(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires float or double (TRID_Confidence): %s' %exp)
                 self.TRID_Confidence = fval_
 # end class TrID_Type
@@ -5061,7 +5066,7 @@ class PE_Binary_Attributes(GeneratedsSuper):
         if attrs.get('dll_count'):
             try:
                 self.dll_count = int(attrs.get('dll_count').value)
-            except ValueError, exp:
+            except ValueError as exp:
                 raise ValueError('Bad integer attribute (dll_count): %s' % exp)
         if attrs.get('type'):
             self.type_ = attrs.get('type').value
@@ -5809,7 +5814,7 @@ class PE_Header(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     fval_ = float(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires float or double (Entropy): %s' %exp)
                 self.Entropy = fval_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -5977,7 +5982,7 @@ class File_Header(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Number_Of_Sections): %s' % exp)
                 self.Number_Of_Sections = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -5998,7 +6003,7 @@ class File_Header(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Number_Of_Symbols): %s' % exp)
                 self.Number_Of_Symbols = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -7633,7 +7638,7 @@ class GUI_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Width): %s' % exp)
                 self.Width = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -7642,7 +7647,7 @@ class GUI_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Height): %s' % exp)
                 self.Height = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -7787,7 +7792,7 @@ class IPC_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Thread_ID): %s' % exp)
                 self.Thread_ID = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -7945,7 +7950,7 @@ class Internet_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (AS_Number): %s' % exp)
                 self.AS_Number = ival_
 # end class Internet_Object_Attributes
@@ -8756,7 +8761,7 @@ class Handle(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Name): %s' % exp)
                 self.Name = ival_
 # end class Handle
@@ -8983,7 +8988,7 @@ class Network_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Internal_Port): %s' % exp)
                 self.Internal_Port = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -8992,7 +8997,7 @@ class Network_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (External_Port): %s' % exp)
                 self.External_Port = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -9008,7 +9013,7 @@ class Network_Object_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Socket_ID): %s' % exp)
                 self.Socket_ID = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -11215,7 +11220,7 @@ class IPC_Action_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Thread_ID): %s' % exp)
                 self.Thread_ID = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -11224,7 +11229,7 @@ class IPC_Action_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Target_PID): %s' % exp)
                 self.Target_PID = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -11379,7 +11384,7 @@ class Process_Action_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Target_PID): %s' % exp)
                 self.Target_PID = ival_
 # end class Process_Action_Attributes
@@ -11522,7 +11527,7 @@ class Memory_Action_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Target_PID): %s' % exp)
                 self.Target_PID = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -11753,7 +11758,7 @@ class Network_Action_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Internal_Port): %s' % exp)
                 self.Internal_Port = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -11762,7 +11767,7 @@ class Network_Action_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (External_Port): %s' % exp)
                 self.External_Port = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -11799,7 +11804,7 @@ class Network_Action_Attributes(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Buffer_Length): %s' % exp)
                 self.Buffer_Length = ival_
 # end class Network_Action_Attributes
@@ -12494,7 +12499,7 @@ class meta_item_metadata(GeneratedsSuper):
         if attrs.get('nvd-id'):
             try:
                 self.nvd_id = int(attrs.get('nvd-id').value)
-            except ValueError, exp:
+            except ValueError as exp:
                 raise ValueError('Bad integer attribute (nvd-id): %s' % exp)
         if attrs.get('xmlns-meta'):
             self.xmlns_meta = attrs.get('xmlns-meta').value
@@ -12711,7 +12716,7 @@ class APICall_Parameter(GeneratedsSuper):
         if attrs.get('ordinal_position'):
             try:
                 self.ordinal_position = int(attrs.get('ordinal_position').value)
-            except ValueError, exp:
+            except ValueError as exp:
                 raise ValueError('Bad integer attribute (ordinal_position): %s' % exp)
             if self.ordinal_position <= 0:
                 raise ValueError('Invalid PositiveInteger (ordinal_position)')
@@ -14713,7 +14718,7 @@ class PEDataDirectoryStruct(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Size): %s' % exp)
                 self.Size = ival_
 # end class PEDataDirectoryStruct
@@ -14931,7 +14936,7 @@ class PESectionHeaderStruct(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Number_Of_Relocations): %s' % exp)
                 self.Number_Of_Relocations = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -14940,7 +14945,7 @@ class PESectionHeaderStruct(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Number_Of_Linenumbers): %s' % exp)
                 self.Number_Of_Linenumbers = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -15044,7 +15049,7 @@ class PEStringType(GeneratedsSuper):
         if attrs.get('length'):
             try:
                 self.length = int(attrs.get('length').value)
-            except ValueError, exp:
+            except ValueError as exp:
                 raise ValueError('Bad integer attribute (length): %s' % exp)
         if attrs.get('encoding'):
             self.encoding = attrs.get('encoding').value
@@ -15375,7 +15380,7 @@ class Imported_Function(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Ordinal): %s' % exp)
                 self.Ordinal = ival_
 # end class Imported_Function
@@ -15476,7 +15481,7 @@ class PEExportType(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Ordinal): %s' % exp)
                 self.Ordinal = ival_
 # end class PEExportType
@@ -15635,7 +15640,7 @@ class PESectionType(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     fval_ = float(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires float or double (Entropy): %s' %exp)
                 self.Entropy = fval_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -15650,7 +15655,7 @@ class PESectionType(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Virtual_Size): %s' % exp)
                 self.Virtual_Size = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
@@ -15665,7 +15670,7 @@ class PESectionType(GeneratedsSuper):
                 sval_ = child_.firstChild.nodeValue
                 try:
                     ival_ = int(sval_)
-                except ValueError, exp:
+                except ValueError as exp:
                     raise ValueError('requires integer (Relocations): %s' % exp)
                 self.Relocations = ival_
 # end class PESectionType
@@ -15922,7 +15927,7 @@ Usage: python <Parser>.py [ -s ] <in_xml_file>
 """
 
 def usage():
-    print USAGE_TEXT
+    print(USAGE_TEXT)
     sys.exit(1)
 
 
