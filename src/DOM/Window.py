@@ -19,7 +19,6 @@
 import os
 import sched
 import time
-#import new
 import logging
 import PyV8
 import traceback
@@ -28,10 +27,9 @@ import pefile
 import numbers
 import datetime
 import collections
-from . import jsbeautifier
 import bs4 as BeautifulSoup
+from . import jsbeautifier
 from .W3C import *
-#import W3C.w3c as w3c
 from .Navigator import Navigator
 from .Location import Location
 from .Screen import Screen
@@ -44,6 +42,7 @@ from .Opera import Opera
 from .Components import Components
 from .Crypto import Crypto
 from .CCInterpreter import CCInterpreter
+from .compatibility import *
 from ActiveX.ActiveX import _ActiveXObject
 from AST.AST import AST
 from Debugger import Shellcode, Global
@@ -83,7 +82,7 @@ class Window(PyV8.JSClass):
             log.debug(str(self.code))
 
             with self.window.context as ctx:
-                if isinstance(self.code, basestring):
+                if isinstance(self.code, thug_string):
                     return ctx.eval(self.code)
                 elif isinstance(self.code, PyV8.JSFunction):
                     return self.code()
@@ -169,7 +168,7 @@ class Window(PyV8.JSClass):
             self.context.locals[name] = _method
             return _method
 
-        if isinstance(symbol, (basestring,
+        if isinstance(symbol, (thug_string,
                                bool,
                                numbers.Number,
                                datetime.datetime,
@@ -796,6 +795,8 @@ class Window(PyV8.JSClass):
         if log.ThugOpts.Personality.browserVersion in ('8.0', ):
             self.Storage = object()
 
+        self.doc.parentWindow = self._parent
+
     def __init_personality_Firefox(self):
         self.addEventListener    = self._addEventListener
         self.removeEventListener = self._removeEventListener
@@ -819,6 +820,7 @@ class Window(PyV8.JSClass):
         self.addEventListener    = self._addEventListener
         self.removeEventListener = self._removeEventListener
         self.opera               = Opera()
+        self.doc.parentWindow    = self._parent
 
     def eval(self, script):
         try:
@@ -829,7 +831,7 @@ class Window(PyV8.JSClass):
         if len(script) > 64: 
             log.warning("[Window] Eval argument length > 64 (%d)" % (len(script), ))
 
-        log.ThugLogging.add_code_snippet(script, 'Javascript', 'Dynamically_Evaluated')
+        log.ThugLogging.add_code_snippet(script, 'Javascript', 'Dynamically_Evaluated', True)
         return self.evalScript(script)
 
     @property

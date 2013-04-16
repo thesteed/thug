@@ -19,7 +19,6 @@
 import os
 import pylibemu
 import struct
-#import W3C.w3c as w3c
 import hashlib
 import string
 import logging
@@ -40,6 +39,7 @@ from .W3C.DOMImplementation import DOMImplementation
 from .W3C.Events.Event import Event
 from .W3C.Events.MouseEvent import MouseEvent
 from .W3C.Events.HTMLEvent import HTMLEvent
+from .compatibility import *
 from ActiveX.ActiveX import _ActiveXObject
 
 log        = logging.getLogger("Thug")
@@ -88,8 +88,8 @@ class DFT(object):
                      'undo',
                      'unload')
 
-    window_on_events = map(lambda e: 'on' + e, window_events)
-                      
+    window_on_events = ['on' + e for e in window_events]
+
     def __init__(self, window):
         self.window            = window
         self.window.doc.DFT    = self
@@ -109,7 +109,7 @@ class DFT(object):
             self.handled_events.append(event)
 
         log.debug("Handling DOM Events: %s" % (",".join(self.handled_events), ))
-        self.handled_on_events = map(lambda e: 'on' + e, self.handled_events)
+        self.handled_on_events = ['on' + e for e in self.handled_events]
         self.dispatched_events = set()
 
     def __enter__(self):
@@ -346,7 +346,7 @@ class DFT(object):
         except:
             return
        
-        if 'language' in attrs.keys() and not attrs['language'].lower() in ('javascript', ):
+        if 'language' in list(attrs.keys()) and not attrs['language'].lower() in ('javascript', ):
             return
 
         for evt, h in attrs.items():
@@ -358,7 +358,7 @@ class DFT(object):
     def attach_event(self, elem, evt, h):
         handler = None
 
-        if isinstance(h, basestring):
+        if isinstance(h, thug_string):
             handler = self.build_event_handler(self.context, h)
             PyV8.JSEngine.collect()
         elif isinstance(h, PyV8.JSFunction):
@@ -727,6 +727,9 @@ class DFT(object):
         if not url:
             return
 
+        if url.startswith("'") and url.endswith("'"):
+            url = url[1:-1]
+
         if url in self.meta and self.meta[url] >= 3:
             return
 
@@ -743,10 +746,15 @@ class DFT(object):
         else:
             self.meta[url] = 1
 
-        self.window.doc     = w3c.parseString(content)
-        self.window.doc.DFT = self
-        self.window.open(url)
-        self.run()
+        #self.window.doc     = w3c.parseString(content)
+        #self.window.doc.DFT = self
+        #self.window.open(url)
+        #self.run()
+
+        doc    = w3c.parseString(content)
+        window = Window.Window(url, doc, personality = log.ThugOpts.useragent)
+        dft    = DFT(window)
+        dft.run()
 
     def handle_frame(self, frame, redirect_type = 'frame'):
         log.warning(frame)

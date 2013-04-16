@@ -117,6 +117,10 @@ class HTMLDocument(Document):
     def readyState(self):
         return "complete"
 
+    @property
+    def compatMode(self):
+        return "BackCompat"
+
     def open(self, mimetype = 'text/html', replace = False):
         self._html = StringIO()
 
@@ -132,30 +136,31 @@ class HTMLDocument(Document):
     def write(self, html):
         if self._html:
             self._html.write(html)
-        else:
-            tag    = self.current
-            parent = tag.parent
-            pos    = parent.contents.index(tag) + 1
+            return
 
-            soup   = BeautifulSoup.BeautifulSoup(html, "html5lib")
-            #for tag in BeautifulSoup.BeautifulSoup(html, "html5lib").contents:
-            #for tag in soup.body.children:
-            for tag in soup.descendants:
-                parent.insert(pos, tag)
+        tag    = self.current
+        parent = tag.parent
+        pos    = parent.contents.index(tag) + 1
 
-                pos += 1
+        soup   = BeautifulSoup.BeautifulSoup(html, "html5lib")
+        #for tag in BeautifulSoup.BeautifulSoup(html, "html5lib").contents:
+        #for tag in soup.body.children:
+        for tag in soup.descendants:
+            parent.insert(pos, tag)
 
-                name = getattr(tag, "name", None)
-                if name is None:
-                    continue
+            pos += 1
 
-                try:
-                    handler = getattr(self._win.doc.DFT, "handle_%s" % (name, ), None)
-                except:
-                    handler = getattr(log.DFT, "handle_%s" % (name, ), None)
+            name = getattr(tag, "name", None)
+            if name in ('script', None):
+                continue
 
-                if handler:
-                    handler(tag)
+            try:
+                handler = getattr(self._win.doc.DFT, "handle_%s" % (name, ), None)
+            except:
+                handler = getattr(log.DFT, "handle_%s" % (name, ), None)
+
+            if handler:
+                handler(tag)
 
     def writeln(self, text):
         self.write(text + "\n")
