@@ -823,15 +823,18 @@ class Window(PyV8.JSClass):
         self.doc.parentWindow    = self._parent
 
     def eval(self, script):
-        try:
-            log.info(jsbeautifier.beautify(script))
-        except:
-            log.info(script) 
-      
+        if len(script) > 4:
+            try:
+                log.info(jsbeautifier.beautify(script))
+            except:
+                log.info(script)
+
         if len(script) > 64: 
             log.warning("[Window] Eval argument length > 64 (%d)" % (len(script), ))
 
-        log.ThugLogging.add_code_snippet(script, 'Javascript', 'Dynamically_Evaluated', True)
+        if len(script) > 4:
+            log.ThugLogging.add_code_snippet(script, 'Javascript', 'Dynamically_Evaluated', True)
+
         return self.evalScript(script)
 
     @property
@@ -841,6 +844,11 @@ class Window(PyV8.JSClass):
             with self._context as ctxt:
                 thug_js = os.path.join(os.path.dirname(os.path.abspath(__file__)), "thug.js")
                 ctxt.eval(open(thug_js, 'r').read())
+
+                if log.ThugOpts.Personality.isIE() and log.ThugOpts.Personality.browserVersion < '8.0':
+                    sessionstorage_js = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sessionStorage.js")
+                    ctxt.eval(open(sessionstorage_js, 'r').read())
+
                 PyV8.JSEngine.collect()
 
         return self._context
@@ -848,8 +856,11 @@ class Window(PyV8.JSClass):
     def evalScript(self, script, tag = None):
         result = 0
 
-        log.JSClassifier.classify('[Local analysis]' if log.ThugOpts.local else self.url,
-                                  script)
+        try:
+            log.JSClassifier.classify('[Local analysis]' if log.ThugOpts.local else self.url,
+                                      script)
+        except:
+            pass
 
         if tag:
             self.doc.current = tag

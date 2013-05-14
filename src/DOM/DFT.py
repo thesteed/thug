@@ -186,6 +186,42 @@ class DFT(object):
 
             profile = profile[1:]
 
+    def check_WinExec(self, emu):
+        profile = emu.emu_profile_output
+
+        while True:
+            offset = profile.find('WinExec')
+            if offset < 0:
+                break
+
+            profile = profile[offset:]
+
+            p = profile.split(';')
+            if not p:
+                profile = profile[1:]
+                continue
+
+            s = p[0].split('"')
+            if len(s) < 2:
+                profile = profile[1:]
+                continue
+
+            url = s[1]
+            if not url.startswith("http"):
+                profile = profile[1:]
+                continue
+
+            if url in log.ThugLogging.shellcode_urls:
+                return
+
+            try:
+                self.window._navigator.fetch(url, redirect_type = "WinExec")
+                log.ThugLogging.shellcode_urls.add(url)
+            except:
+                pass
+
+            profile = profile[1:]
+
     def check_shellcode(self, shellcode):
         try:
             sc = self.build_shellcode(shellcode)
@@ -199,7 +235,8 @@ class DFT(object):
             log.ThugLogging.add_code_snippet(emu.emu_profile_output, 'Assembly', 'Shellcode', method = 'Static Analysis')
             log.warning("[Shellcode Profile]\n\n%s" % (emu.emu_profile_output, ))
             self.check_URLDownloadToFile(emu)
-        
+            self.check_WinExec(emu)
+
         self.check_url(sc, shellcode)
         emu.free()
 
@@ -313,8 +350,11 @@ class DFT(object):
                 else:
                     handler(evtObject)
 
-        if not getattr(self.window.doc.tag, '_listeners', None):
-            return 
+        #if not getattr(self.window.doc.tag, '_listeners', None):
+        #    return
+
+        if not '_listeners' in self.window.doc.tag.__dict__:
+            return
 
         for (eventType, listener, capture) in self.window.doc.tag._listeners:
             if not eventType in (onevt[2:], ):
@@ -370,7 +410,7 @@ class DFT(object):
                 pass
 
         if not handler:
-                return
+            return
 
         if getattr(elem, 'name', None) and elem.name in ('body', ) and evt in self.window_on_events:
             setattr(self.window, evt, handler)
@@ -781,9 +821,13 @@ class DFT(object):
             src = _src
 
         doc    = w3c.parseString(content)
-        window = Window.Window(src, doc, personality = log.ThugOpts.useragent)
-        #window.open(src)
-            
+        window = Window.Window(self.window.url, doc, personality = log.ThugOpts.useragent)
+        window.open(src)
+
+        frame_id = frame.get('id', None)
+        if frame_id:
+            log.ThugLogging.windows[frame_id] = window
+
         dft = DFT(window)
         dft.run()
 
@@ -940,13 +984,22 @@ class DFT(object):
             self.set_event_listeners(child)
 
         for evt in self.handled_on_events:
-            self.handle_window_event(evt)
+            try:
+                self.handle_window_event(evt)
+            except:
+                log.warning("[handle_window_event] Event %s not properly handled" % (evt, ))
 
         for evt in self.handled_on_events:
-            self.handle_document_event(evt)
+            try:
+                self.handle_document_event(evt)
+            except:
+                log.warning("[handle_document_event] Event %s not properly handled" % (evt, ))
 
         for evt in self.handled_events:
-            self.handle_element_event(evt)
+            try:
+                self.handle_element_event(evt)
+            except:
+                log.warning("[handle_element_event] Event %s not properly handled" % (evt, ))
 
     def run(self):
         with self.context as ctx:

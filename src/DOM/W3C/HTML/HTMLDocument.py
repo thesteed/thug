@@ -53,6 +53,14 @@ class HTMLDocument(Document):
         self._domain        = urlparse(self._win.url).hostname if self._win else ''
         self.current        = None
 
+    def __getattr__(self, attr):
+        if self._win and getattr(self._win, "doc", None):
+            if attr in self._win.doc.DFT.handled_on_events:
+                return None
+
+        #print("[HTMLDocument __getattr__] %s" % (attr, ))
+        return self.getElementById(attr)
+
     def getWindow(self):
         return self._win
 
@@ -142,10 +150,12 @@ class HTMLDocument(Document):
         parent = tag.parent
         pos    = parent.contents.index(tag) + 1
 
-        soup   = BeautifulSoup.BeautifulSoup(html, "html5lib")
-        #for tag in BeautifulSoup.BeautifulSoup(html, "html5lib").contents:
-        #for tag in soup.body.children:
-        for tag in soup.descendants:
+        soup = BeautifulSoup.BeautifulSoup(html, "html5lib")
+        soup.html.unwrap()
+        soup.head.unwrap()
+        soup.body.unwrap()
+
+        for tag in soup:
             parent.insert(pos, tag)
 
             pos += 1

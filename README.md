@@ -50,6 +50,10 @@ contents.
 
 - Python-Magic - https://github.com/ahupp/python-magic
 
+- Yara - https://code.google.com/p/yara-project/
+
+- Yara-Python - https://code.google.com/p/yara-project/
+
 - MongoDB (optional) - http://www.mongodb.org/
 
 - PyMongo (optional) - http://www.mongodb.org/display/DOCS/Python+Language+Center
@@ -89,9 +93,11 @@ described below.
 2. Patch V8 source code with the patches you can find in thug/patches
    directory
 
-	```$ cp thug/patches/V8-patch* .
+	```
+	$ cp thug/patches/V8-patch* .
 	$ patch -p0 < V8-patch1.diff
-	patching file v8/src/log.h```
+	patching file v8/src/log.h
+	```
 
 3. Checkout PyV8 -r478 source code from SVN
 
@@ -113,8 +119,10 @@ described below.
 7. Build and install (PyV8 setup.py will properly install both V8
    and PyV8)
 
-	```~/pyv8 $ python setup.py build
-	~/pyv8 $ sudo python setup.py install```
+	```
+	~/pyv8 $ python setup.py build
+	~/pyv8 $ sudo python setup.py install
+	```
 
 
 In order to install the other required libraries and packages please
@@ -181,6 +189,7 @@ Synopsis:
         win7ie80                Internet Explorer 8.0   (Windows 7)
         win7ie90                Internet Explorer 9.0   (Windows 7)
         win7chrome20            Chrome 20.0.1132.47     (Windows 7)
+        win7firefox3            Firefox 3.6.13          (Windows 7)
         win7safari5             Safari 5.1.7            (Windows 7)
         osx10safari5            Safari 5.1.1            (MacOS X 10.7.2)
         osx10chrome19           Chrome 19.0.1084.54     (MacOS X 10.7.4)
