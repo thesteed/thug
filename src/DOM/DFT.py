@@ -829,8 +829,10 @@ class DFT(object):
         #self.run()
 
         doc    = w3c.parseString(content)
-        window = Window.Window(url, doc, personality = log.ThugOpts.useragent)
-        dft    = DFT(window)
+        window = Window.Window(self.window.url, doc, personality = log.ThugOpts.useragent)
+        window.open(url)
+
+        dft = DFT(window)
         dft.run()
 
     def handle_frame(self, frame, redirect_type = 'frame'):
@@ -892,7 +894,11 @@ class DFT(object):
         log.info(style)
 
         cssparser = CSSParser(loglevel = logging.CRITICAL, validate = False)
-        sheet     = cssparser.parseString(style.text)
+
+        try:
+            sheet = cssparser.parseString(style.text)
+        except:
+            return
 
         for rule in sheet:
             if rule.type == rule.FONT_FACE_RULE:

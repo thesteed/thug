@@ -12,6 +12,7 @@ except ImportError:
 
 log = logging.getLogger("Thug")
 
+
 def abort(self):
     log.ThugLogging.add_behavior_warn("[Microsoft XMLHTTP ActiveX] abort")
     return 0
@@ -31,13 +32,13 @@ def open(self, bstrMethod, bstrUrl, varAsync = True, varUser = None, varPassword
                                       forward = False,
                                       data = {
                                                 "method" : bstrMethod,
-                                                "url"    : bstrUrl,
+                                                "url"    : str(bstrUrl),
                                                 "async"  : str(varAsync)
                                              }
                                      )
     
     self.bstrMethod  = bstrMethod
-    self.bstrUrl     = bstrUrl
+    self.bstrUrl     = str(bstrUrl)
     self.varAsync    = varAsync
     self.varUser     = varUser
     self.varPassword = varPassword
@@ -57,7 +58,7 @@ def send(self, varBody = None):
                                       forward = False,
                                       data = {
                                                 "method" : self.bstrMethod,
-                                                "url" : self.bstrUrl
+                                                "url"    : str(self.bstrUrl)
                                              }
                                      )
 
@@ -76,3 +77,30 @@ def setRequestHeader(self, bstrHeader, bstrValue):
     self.requestHeaders[bstrHeader] = bstrValue
     return 0
 
+
+def getResponseHeader(self, header):
+    body = ""
+    if header in self.responseHeaders:
+        body = self.responseHeaders[header]
+
+    try:
+        response, content = self._window._navigator.fetch(self.bstrUrl,
+                                                          method  = self.bstrMethod,
+                                                          headers = self.requestHeaders,
+                                                          body    = body)
+    except:
+        pass
+
+
+def getAllResponseHeaders(self):
+    body = ""
+    for k, v in self.responseHeaders.items():
+        body += "%s: %s\r\n" % (k, v, )
+
+    try:
+        response, content = self._window._navigator.fetch(self.bstrUrl,
+                                                          method  = self.bstrMethod,
+                                                          headers = self.requestHeaders,
+                                                          body    = body)
+    except:
+        pass
