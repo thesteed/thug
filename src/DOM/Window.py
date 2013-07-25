@@ -27,8 +27,10 @@ import pefile
 import numbers
 import datetime
 import collections
+import urllib
+import new
 import bs4 as BeautifulSoup
-from . import jsbeautifier
+import jsbeautifier
 from .W3C import *
 from .Navigator import Navigator
 from .Location import Location
@@ -162,8 +164,8 @@ class Window(PyV8.JSClass):
                     break
 
             if _method is None:
-                #_method = new.instancemethod(symbol, self, Window)
-                _method = symbol.__get__(self, Window)
+                _method = new.instancemethod(symbol, self, Window)
+                #_method = symbol.__get__(self, Window)
 
             setattr(self, name, _method)
             self.context.locals[name] = _method
@@ -828,6 +830,9 @@ class Window(PyV8.JSClass):
         self.console             = Console()
 
     def eval(self, script):
+        if script is None:
+            return
+
         if len(script) > 4:
             try:
                 log.info(jsbeautifier.beautify(script))
@@ -904,26 +909,27 @@ class Window(PyV8.JSClass):
         if len(s) > 16:
             log.ThugLogging.shellcodes.add(s)
 
+        # %xx format
+        if '%' in s and '%u' not in s:
+            return urllib.unquote(s)
+
+        # %uxxxx format
         while i < len(s):
             if s[i] == '"':
                 i += 1
                 continue
 
-            if s[i] == '%':
-                if (i + 6) <= len(s) and s[i + 1] == 'u':
+            if s[i] == '%' and s[i + 1] == 'u':
+                if (i + 6) <= len(s):
                     currchar = int(s[i + 2: i + 4], 16) 
                     nextchar = int(s[i + 4: i + 6], 16) 
                     sc.append(chr(nextchar))
                     sc.append(chr(currchar))
                     i += 6
-                elif (i + 3) <= len(s) and s[i + 1] == 'u':
+                elif (i + 3) <= len(s):
                     currchar = int(s[i + 2: i + 4], 16) 
                     sc.append(chr(currchar))
                     i += 3
-                else:
-                    sc.append(s[i])
-                    i += 1
-
             else:
                 sc.append(s[i])
                 i += 1
@@ -1009,7 +1015,7 @@ class Window(PyV8.JSClass):
             html = ''
             kwds = {}
        
-        dom = BeautifulSoup.BeautifulSoup(html, "html5lib")
+        dom = BeautifulSoup.BeautifulSoup(html, "html.parser")
         
         for spec in specs.split(','):
             spec = [s.strip() for s in spec.split('=')]
