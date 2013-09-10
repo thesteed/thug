@@ -8,13 +8,9 @@ For the iTES project (www.ites-project.org)
 
 import argparse
 import pika
-import sys
-import time
 import json
 from ConfigParser import ConfigParser
 import subprocess
-import os
-import shutil
 
 
 class Thugd():
@@ -94,7 +90,7 @@ class Thugd():
         conf.read(self.configfile)
         self.host = conf.get("jobs", "host")
         self.queue = conf.get("jobs", "queue")
-
+ 
         self.rhost = conf.get("results", "host")
         self.rqueue = conf.get("results", "queue")
 

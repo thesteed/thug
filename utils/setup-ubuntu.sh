@@ -4,9 +4,7 @@
 #based on https://github.com/buffer/thug/blob/master/doc/source/build.rst
 
 echo "Installing needed libraries and tools..."
-sudo apt-get install subversion git python build-essential python-setuptools libboost-python-dev libboost-thread-dev python-dev build-essential git-core autoconf libtool
-echo "Installing pip..."
-sudo easy_install pip
+sudo apt-get install subversion git python build-essential python-setuptools libboost-python-dev libboost-thread-dev python-dev build-essential git-core autoconf libtool python-pip
 
 echo 'Please wait, checking out subversion repo for [http://v8.googlecode.com/svn/trunk/]...'
 svn checkout -r14110 http://v8.googlecode.com/svn/trunk/ v8 1>setup-ubuntu.log
@@ -34,6 +32,7 @@ cd ..
 echo "Installing python libraries (beautifulsoup4, html5lib)..."
 sudo pip install beautifulsoup4 1>>setup-ubuntu.log
 sudo pip install html5lib 1>>setup-ubuntu.log
+sudo easy_install jsbeautifier 1>>setup-ubuntu.log
 
 
 
