@@ -56,6 +56,8 @@ contents.
 
 - Yara-Python - https://code.google.com/p/yara-project/
 
+- Boost - http://www.boost.org/
+
 - MongoDB (optional) - http://www.mongodb.org/
 
 - PyMongo (optional) - http://www.mongodb.org/display/DOCS/Python+Language+Center
@@ -82,43 +84,39 @@ or alternatively
 ```# pip install beautifulsoup4```
 
 
+### Boost
+
+Boost provides free peer-reviewed portable C++ source libraries.
+http://www.boost.org/
+Boost packages should be available on most modern Linux systems. 
+
+
+
 ### V8/PyV8
 
 In order to properly install V8 and PyV8 please follow the procedure
 described below.
 
 
-1. Checkout V8 -r14110 source code from SVN
+1. Checkout V8 source code from SVN
 
-	```$ svn checkout -r14110 http://v8.googlecode.com/svn/trunk/ v8```
+	```$ svn checkout http://v8.googlecode.com/svn/trunk/ v8```
 
-2. Patch V8 source code with the patches you can find in thug/patches
-   directory
 
-	```
-	$ cp thug/patches/V8-patch* .
-	$ patch -p0 < V8-patch1.diff
-	patching file v8/src/log.h
-	```
+2. Checkout PyV8 source code from SVN
 
-3. Checkout PyV8 -r478 source code from SVN
+	```$ svn checkout http://pyv8.googlecode.com/svn/trunk/ pyv8```
 
-	```$ svn checkout -r478 http://pyv8.googlecode.com/svn/trunk/ pyv8```
-
-4. Set the environment variable V8_HOME with the V8 source code
+3. Set the environment variable V8_HOME with the V8 source code
    absolute path (you need to change the value reported below)
 
 	```$ export V8_HOME=/home/buffer/v8```
 
-5. Move to PyV8 source code directory
+4. Move to PyV8 source code directory
 
 	```$ cd pyv8```
 
-6. Edit PyV8.py setup.py file and comment line 466 as shown
-
-	\#checkout_v8()
-
-7. Build and install (PyV8 setup.py will properly install both V8
+5. Build and install (PyV8 setup.py will properly install both V8
    and PyV8)
 
 	```
@@ -197,7 +195,9 @@ Synopsis:
         osx10chrome19           Chrome 19.0.1084.54     (MacOS X 10.7.4)
         galaxy2chrome18         Chrome 18.0.1025.166    (Samsung Galaxy S II, Android 4.0.3)
         galaxy2chrome25         Chrome 25.0.1364.123    (Samsung Galaxy S II, Android 4.0.3)
+        galaxy2chrome29         Chrome 29.0.1547.59     (Samsung Galaxy S II, Android 4.1.2)
         linuxchrome26           Chrome 26.0.1410.19     (Linux)
+        linuxchrome30           Chrome 30.0.1599.15     (Linux)
         linuxfirefox19          Firefox 19.0            (Linux)
 ```
 
