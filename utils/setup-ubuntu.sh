@@ -4,17 +4,18 @@
 #based on https://github.com/buffer/thug/blob/master/doc/source/build.rst
 
 echo "Installing needed libraries and tools..."
-sudo apt-get install subversion git python build-essential python-setuptools libboost-python-dev libboost-thread-dev python-dev build-essential git-core autoconf libtool python-pip
+sudo apt-get install subversion git python build-essential python-setuptools libboost-python-dev libboost-thread-dev python-dev \
+	build-essential git-core autoconf libtool python-pip libpcre3 libpcre3-dev
 
 echo 'Please wait, checking out subversion repo for [http://v8.googlecode.com/svn/trunk/]...'
-svn checkout -r14110 http://v8.googlecode.com/svn/trunk/ v8 1>setup-ubuntu.log
+svn checkout http://v8.googlecode.com/svn/trunk/ v8 1>setup-ubuntu.log
 
 echo 'Patching V8...'
 patch -p0 < ../patches/V8-patch1.diff 1>>setup-ubuntu.log
 
 
-echo 'Please wait, checking out subversion repo for [-r478 http://pyv8.googlecode.com/svn/trunk/]...'
-svn checkout -r478 http://pyv8.googlecode.com/svn/trunk/ pyv8 1>>setup-ubuntu.log
+echo 'Please wait, checking out subversion repo for [http://pyv8.googlecode.com/svn/trunk/]...'
+svn checkout http://pyv8.googlecode.com/svn/trunk/ pyv8 1>>setup-ubuntu.log
 
 
 echo 'Setting environment variable...'
@@ -61,6 +62,26 @@ sudo ldconfig
 cd ..
 
 
+echo 'Please wait, getting yara [http://yara-project.googlecode.com/files/yara-1.7.tar.gz]...'
+wget http://yara-project.googlecode.com/files/yara-1.7.tar.gz
+echo 'Please wait, getting yara-python [http://yara-project.googlecode.com/files/yara-python-1.7.tar.gz]...'
+wget http://yara-project.googlecode.com/files/yara-python-1.7.tar.gz
+
+tar xvfz yara-1.7.tar.gz
+cd yara-1.7
+./configure
+make
+make check
+sudo make install
+echo 'Yara compiled. Now adding yara python support...'
+cd ..
+tar xvfz yara-python-1.7.tar.gz
+cd yara-python-1.7
+python setup.py build
+sudo python setup.py install
+echo 'yara python installed.'
+
+
 echo "Installing python libraries..."
 echo "Installing python library: pefile..."
 sudo pip install pefile 1>>setup-ubuntu.log
@@ -76,9 +97,6 @@ sudo pip install cssutils 1>>setup-ubuntu.log
 	
 echo "Installing python library: zope..."
 sudo pip install zope.interface 1>>setup-ubuntu.log
-	
-echo "Installing python library: cssutils..."
-sudo pip install cssutils 1>>setup-ubuntu.log
 
 echo "Installing graphviz..."
 sudo apt-get install graphviz
@@ -93,6 +111,7 @@ sudo pip install pydot 1>>setup-ubuntu.log
 	
 echo "Installing python library: python-magic..."
 sudo pip install python-magic 1>>setup-ubuntu.log
+	
 	
 echo -n "Install MongoDB?(y/n): "
 read response
