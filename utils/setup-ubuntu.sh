@@ -5,7 +5,7 @@
 
 echo "Installing needed libraries and tools..."
 sudo apt-get install subversion git python build-essential python-setuptools libboost-python-dev libboost-thread-dev python-dev \
-	build-essential git-core autoconf libtool python-pip libpcre3 libpcre3-dev
+	build-essential git-core autoconf libtool python-pip libpcre3 libpcre3-dev libboost-system-dev libboost-dev dtrace
 
 echo 'Please wait, checking out subversion repo for [http://v8.googlecode.com/svn/trunk/]...'
 svn checkout http://v8.googlecode.com/svn/trunk/ v8 1>setup-ubuntu.log
