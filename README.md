@@ -1,4 +1,3 @@
-
 # Thug
 
 
@@ -11,7 +10,7 @@ A complement to honeypots, a honeyclient is a tool designed to mimic
 the behavior of a user-driven network client application, such as a web
 browser, and be exploited by an attacker's content.
 
-Thug is a Python low-interaction honeyclient aimed at mimicing the
+Thug is a Python low-interaction honeyclient aimed at mimicking the
 behavior of a web browser in order to detect and emulate malicious
 contents.
 
@@ -34,11 +33,15 @@ contents.
 
 - Pylibemu 0.2.4 or later - https://github.com/buffer/pylibemu
 
-- Pefile - http://code.google.com/p/pefile/
+- Pefile r141 or later - http://code.google.com/p/pefile/
+
+- lxml - http://lxml.de/
 
 - Chardet - http://pypi.python.org/pypi/chardet
 
 - httplib2 0.7.4 or later - http://code.google.com/p/httplib2/
+
+- Requests - https://github.com/kennethreitz/requests
 
 - Cssutils 0.9.9 or later - http://pypi.python.org/pypi/cssutils/
 
@@ -52,9 +55,11 @@ contents.
 
 - Python-Magic - https://github.com/ahupp/python-magic
 
-- Yara - https://code.google.com/p/yara-project/
+- Rarfile - http://rarfile.berlios.de/
 
-- Yara-Python - https://code.google.com/p/yara-project/
+- Yara 2.0 - https://github.com/plusvic/yara
+
+- Yara-Python 2.0 - https://github.com/plusvic/yara
 
 - Boost - http://www.boost.org/
 
@@ -165,9 +170,12 @@ Synopsis:
         -m, --no-cache          Disable local web cache
         -a, --ast-debug         Enable AST debug mode (requires debug mode)
         -g, --http-debug        Enable HTTP debug mode
-        -t, --threshold         Maximum pages to fetch
+        -t, --threshold=        Maximum pages to fetch
         -E, --extensive         Extensive fetch of linked pages
-        -T, --timeout           Set the analysis timeout (in seconds)
+        -T, --timeout=          Set the analysis timeout (in seconds)
+		-B, --broken-url        Set the broken URL mode
+		-y, --vtquery           Query VirusTotal for samples analysis
+		-s, --vtsubmit          Submit samples to VirusTotal
 
         Plugins:
         -A, --adobepdf=         Specify the Adobe Acrobat Reader version (default: 9.1.0)
@@ -201,12 +209,15 @@ Synopsis:
         win7safari5             Safari 5.1.7            (Windows 7)
         osx10safari5            Safari 5.1.1            (MacOS X 10.7.2)
         osx10chrome19           Chrome 19.0.1084.54     (MacOS X 10.7.4)
-        galaxy2chrome18         Chrome 18.0.1025.166    (Samsung Galaxy S II, Android 4.0.3)
-        galaxy2chrome25         Chrome 25.0.1364.123    (Samsung Galaxy S II, Android 4.0.3)
-        galaxy2chrome29         Chrome 29.0.1547.59     (Samsung Galaxy S II, Android 4.1.2)
         linuxchrome26           Chrome 26.0.1410.19     (Linux)
         linuxchrome30           Chrome 30.0.1599.15     (Linux)
         linuxfirefox19          Firefox 19.0            (Linux)
+        galaxy2chrome18         Chrome 18.0.1025.166    (Samsung Galaxy S II, Android 4.0.3)
+        galaxy2chrome25         Chrome 25.0.1364.123    (Samsung Galaxy S II, Android 4.0.3)
+        galaxy2chrome29         Chrome 29.0.1547.59     (Samsung Galaxy S II, Android 4.1.2)
+        nexuschrome18           Chrome 18.0.1025.133    (Google Nexus, Android 4.0.4)
+        ipadsafari7             Safari 7.0              (iPad, iOS 7.0.4)
+		ipadchrome33            Chrome 33.0.1750.21     (iPad, iOS 7.1)
 ```
 
 
@@ -236,7 +247,7 @@ making a donation using Paypal (details at http://buffer.github.com/thug/).
 
 ## License information
 
-Copyright (C) 2011-2013 Angelo Dell'Aera <buffer@antifork.org>
+Copyright (C) 2011-2014 Angelo Dell'Aera <buffer@antifork.org>
 
 License: GNU General Public License, version 2 or later; see COPYING.txt
          included in this archive for details.

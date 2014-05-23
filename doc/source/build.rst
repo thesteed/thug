@@ -13,10 +13,12 @@ Requirements
 * Html5lib
 * Jsbeautifier
 * Libemu                   
-* Pylibemu                 
-* Pefile                   
+* Pylibemu
+* Pefile
+* lxml
 * Chardet                  
-* httplib2 
+* httplib2
+* Requests
 * boost
 * Cssutils
 * Zope interface
@@ -24,8 +26,9 @@ Requirements
 * Pyparsing
 * Pydot
 * Python-Magic
-* Yara
-* Yara-Python
+* Rarfile
+* Yara 2.0
+* Yara-Python 2.0
 * MongoDB (optional)       
 * PyMongo (optional)       
 * RabbitMQ (optional)
@@ -198,8 +201,26 @@ Pefile is a multi-platform Python module to read and work with Portable Executab
 all the sections, section's information and data. Pefile homepage is located at
 http://code.google.com/p/pefile/.
 
+Pefile r141 or later is strictly required.
+
 If not available as a package for your Linux distribution, the best way
 to install Pefile is through easy_install.
+
+.. code-block:: sh
+
+        # easy_install pefile 
+
+
+lxml
+^^^^
+
+The lxml XML toolkit is a Pythonic binding for the C libraries libxml2 and libxslt.
+It is unique in that it combines the speed and XML feature completeness of these
+libraries with the simplicity of a native Python API, mostly compatible but superior
+to the well-known ElementTree API.
+
+If not available as a package for your Linux distribution, the best way
+to install lxml is through easy_install.
 
 .. code-block:: sh
 
@@ -235,6 +256,21 @@ to install httplib2 is through easy_install.
 .. code-block:: sh
 
         # easy_install httplib2
+
+
+Requests
+^^^^^^^^
+
+Requests is an Apache2 Licensed HTTP library, written in Python, for human 
+beings. Requests homepage is located at 
+http://docs.python-requests.org/en/latest/
+
+If not available as a package for your Linux distribution, the best way
+to install requests is through easy_install.
+
+.. code-block:: sh
+
+        # easy_install requests
 
 
 Boost
@@ -325,11 +361,24 @@ to install python-magic is through easy_install.
 
         # easy_install magic
 
+ 
+Rarfile
+^^^^^^^
+
+Rarfile homepage is located at http://rarfile.berlios.de/.
+
+If not available as a package for your Linux distribution, the best way 
+to install rarfile is through easy_install.
+
+.. code-block:: sh
+
+        # easy_install rarfile
+
 
 Yara
 ^^^^
 
-Yara homepage is located at https://code.google.com/p/yara-project/
+Yara homepage is located at https://github.com/plusvic/yara
 
 If not available as a package for your Linux distribution, the best way
 to install Yara is compiling its source code. Please take a look at Yara
@@ -339,7 +388,7 @@ documentation for details.
 Yara-Python
 ^^^^^^^^^^^
 
-Yara-Python homepage is located at https://code.google.com/p/yara-project/
+Yara-Python homepage is located at https://github.com/plusvic/yara
 
 If not available as a package for your Linux distribution, the best way
 to install Yara-Python is compiling its source code. Please take a look 

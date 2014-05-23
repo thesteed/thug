@@ -96,7 +96,9 @@ class Mapper():
         """
         self.resdir   = resdir
         self.simplify = simplify
-        self.svgfile  = os.path.join(self.resdir, "graph.svg")
+
+        graphdir     = os.path.abspath(os.path.join(self.resdir, os.pardir))
+        self.svgfile = os.path.join(graphdir, "graph.svg")
 
         self.data = {
                         "locations"   : [],
@@ -385,7 +387,7 @@ if __name__ == "__main__":
 
     m = Mapper(args.resdir, simplify = args.simplify)
     if os.path.isdir(args.source):
-        for afile in allFiles(args.source, "avlog.json"):
+        for afile in allFiles(args.source, "analysis.json"):
             #print afile
             m.add_file(afile)
     else:

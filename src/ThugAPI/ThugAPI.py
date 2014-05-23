@@ -41,7 +41,7 @@ from Classifier import URLClassifier
 
 log = logging.getLogger("Thug")
 
-__thug_version__ = '0.4.30'
+__thug_version__ = '0.4.38'
 
 
 class ThugAPI:
@@ -151,6 +151,12 @@ class ThugAPI:
     def set_timeout(self, timeout):
         log.ThugOpts.timeout = timeout
 
+    def get_broken_url(self):
+        return log.ThugOpts.broken_url
+
+    def set_broken_url(self):
+        log.ThugOpts.broken_url = True
+
     def log_init(self, url):
         log.ThugLogging = ThugLogging(self.thug_version)
         log.ThugLogging.set_basedir(url)
@@ -167,6 +173,12 @@ class ThugAPI:
         for handler in root.handlers:
             if isinstance(handler, logging.StreamHandler):
                 handler.addFilter(OpaqueFilter())
+
+    def set_vt_query(self):
+        log.ThugOpts.set_vt_query()
+
+    def set_vt_submit(self):
+        log.ThugOpts.set_vt_submit()
 
     def add_urlclassifier(self, rule):
         log.URLClassifier.add_rule(rule)

@@ -36,22 +36,29 @@ class ThugOpts(dict):
     proxy_schemes = ('http', 'http2', 'socks4', 'socks5', )
 
     def __init__(self):
-        self._proxy_info = None
-        self.local       = False
-        self.extensive   = False
-        self._threshold  = 0
-        self._timeout    = None
-        self.ast_debug   = False
-        self.http_debug  = 0
-        self._useragent  = 'winxpie60'
-        self._referer    = 'about:blank'
-        self._events     = list()
-        self._delay      = 0
-        self._no_fetch   = False
-        self._cache      = '/tmp/thug-cache-%s' % (os.getuid(), )
-        self.Personality = Personality()
+        self._proxy_info      = None
+        self._proxy           = None
+        self.local            = False
+        self.extensive        = False
+        self._threshold       = 0
+        self._timeout         = None
+        self._timeout_in_secs = None
+        self.ast_debug        = False
+        self.http_debug       = 0
+        self._useragent       = 'winxpie60'
+        self._referer         = 'about:blank'
+        self._events          = list()
+        self._delay           = 0
+        self._no_fetch        = False
+        self._broken_url      = False
+        self._vt_query        = False
+        self._vt_submit       = False
+        self._cache           = '/tmp/thug-cache-%s' % (os.getuid(), )
+        self.Personality      = Personality()
 
     def set_proxy_info(self, proxy):
+        self._proxy = proxy 
+
         p = urlparse.urlparse(proxy)
 
         if p.scheme.lower() not in self.proxy_schemes:
@@ -151,6 +158,8 @@ class ThugOpts(dict):
         return self._timeout
 
     def set_timeout(self, timeout):
+        self._timeout_in_secs = timeout
+
         try:
             seconds = int(timeout)
         except:
@@ -162,3 +171,27 @@ class ThugOpts(dict):
         self._timeout = now + delta
 
     timeout = property(get_timeout, set_timeout)
+
+    def get_broken_url(self):
+        return self._broken_url
+
+    def set_broken_url(self, mode):
+        self._broken_url = mode
+
+    broken_url = property(get_broken_url, set_broken_url)
+
+    def get_vt_query(self):
+        return self._vt_query
+
+    def set_vt_query(self):
+        self._vt_query = True
+
+    vt_query = property(get_vt_query, set_vt_query)
+
+    def get_vt_submit(self):
+        return self._vt_submit
+
+    def set_vt_submit(self):
+        self._vt_submit = True
+
+    vt_submit = property(get_vt_submit, set_vt_submit)

@@ -19,7 +19,10 @@ svn checkout http://pyv8.googlecode.com/svn/trunk/ pyv8 1>>setup-ubuntu.log
 
 
 echo 'Setting environment variable...'
-export V8_HOME=`pwd`/v8
+#export V8_HOME=`pwd`/v8
+echo "V8_HOME = \"$PWD/v8\"" >> pyv8/buildconf.py
+echo "DEBUG = True" >> pyv8/buildconf.py
+echo "V8_SVN_REVISION = 14110" >> pyv8/buildconf.py
 
 echo "Building PyV8 and V8(this may take several minutes)..."
 cd pyv8
@@ -101,6 +104,9 @@ sudo pip install zope.interface 1>>setup-ubuntu.log
 echo "Installing graphviz..."
 sudo apt-get install graphviz
 
+echo "Installing python library: lxml..."
+sudo apt-get install python-lxml python-lxml-dbg
+
 
 echo "Installing python libraries..."
 echo "Installing python library: pyparsing==1.5.7..."
@@ -112,7 +118,15 @@ sudo pip install pydot 1>>setup-ubuntu.log
 echo "Installing python library: python-magic..."
 sudo pip install python-magic 1>>setup-ubuntu.log
 	
-	
+echo "Installing python library: rarfile..."
+sudo pip install rarfile 1>>setup-ubuntu.log
+
+echo "Installing python library: jsbeautifier..."
+sudo pip install jsbeautifier 1>>setup-ubuntu.log
+
+echo "Installing python library: yara..."
+sudo pip install yara 1>>setup--ubuntu.log
+
 echo -n "Install MongoDB?(y/n): "
 read response
 if [ "$response" = "y" ]; then

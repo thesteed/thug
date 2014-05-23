@@ -924,6 +924,28 @@ CLSID = [
                           }
         },
 
+        # ShockwaveFlash.ShockwaveFlash.12
+        {    
+            'id'        : (),
+            'name'      : ( 'shockwaveflash.shockwaveflash.12', ),
+            'attrs'     : {},
+            'funcattrs' : {},
+            'methods'   : {  
+                            'GetVariable'   : ShockwaveFlash12.GetVariable,
+                          }    
+        }, 
+
+        # SilverLight
+        {
+            'id'        : (),
+            'name'      : ( 'agcontrol.agcontrol', ),
+            'attrs'     : {},
+            'funcattrs' : {},
+            'methods'   : {
+                            'isVersionSupported' : SilverLight.isVersionSupported,
+                          }
+        },
+
         # SinaDLoader
         # FIXME Download
         {

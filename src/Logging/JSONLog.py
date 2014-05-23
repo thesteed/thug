@@ -25,6 +25,7 @@ import datetime
 import os
 import json
 import codecs
+import chardet
 from .Mapper import Mapper
 from .compatibility import *
 
@@ -46,17 +47,46 @@ class JSONLog(object):
         self.signatures      = list()
 
         self.data = {
-                        "url"           : None,
-                        "timestamp"     : str(datetime.datetime.now()),
-                        "thugversion"   : thug_version,
-                        "logtype"       : "json-log",
-                        "behavior"      : [],
-                        "code"          : [],
-                        "files"         : [],
-                        "connections"   : [],
-                        "locations"     : [],
-                        "exploits"      : []
+                        "url"         : None,
+                        "timestamp"   : str(datetime.datetime.now()),
+                        "logtype"     : "json-log",
+                        "thug"        : {
+                                        "version"            : thug_version,
+                                        "personality" : {
+                                            "useragent"      : log.ThugOpts.useragent
+                                            },
+                                        "plugins" : {
+                                            "acropdf"        : self.get_vuln_module("acropdf"),
+                                            "javaplugin"     : self.get_vuln_module("_javaplugin"),
+                                            "shockwaveflash" : self.get_vuln_module("shockwave_flash")
+                                            },
+                                        "options" : {
+                                            "local"          : log.ThugOpts.local,
+                                            "nofetch"        : log.ThugOpts.no_fetch,
+                                            "proxy"          : log.ThugOpts._proxy,
+                                            "events"         : log.ThugOpts.events,
+                                            "delay"          : log.ThugOpts.delay,
+                                            "referer"        : log.ThugOpts.referer,
+                                            "timeout"        : log.ThugOpts._timeout_in_secs,
+                                            "threshold"      : log.ThugOpts.threshold,
+                                            "extensive"      : log.ThugOpts.extensive,
+                                            },
+                                        },
+                        "behavior"    : [],
+                        "code"        : [],
+                        "files"       : [],
+                        "connections" : [],
+                        "locations"   : [],
+                        "exploits"    : []
                     }
+
+    def get_vuln_module(self, module):
+        disabled = getattr(log.ThugVulnModules, "%s_disabled" % (module, ), True)
+        if disabled: 
+            return "disabled"
+
+        return getattr(log.ThugVulnModules, module)
+
 
     def fix(self, data):
         """
@@ -64,7 +94,11 @@ class JSONLog(object):
 
         @data  data to encode properly
         """
-        return thug_unicode(data).replace("\n", "").strip()
+        try:
+            enc = chardet.detect(data)
+            return data.decode(enc['encoding']).replace("\n", "").strip()
+        except:
+            return thug_unicode(data).replace("\n", "").strip()
 
     def make_counter(self, p):
         id = p
@@ -159,9 +193,12 @@ class JSONLog(object):
         self.data["files"].append(data)
 
     def export(self, basedir):
-        report = codecs.open(os.path.join(basedir, "avlog.json"),
-            "w", errors='ignore')
-        json.dump(self.data, report, sort_keys=False, indent=4)
+        report = codecs.open(os.path.join(basedir, "analysis.json"),
+                             "w", 
+                             errors='ignore', 
+                             encoding = 'utf-8')
+
+        json.dump(self.data, report, ensure_ascii = False, encoding = "utf-8", sort_keys = False, indent = 4)
         report.close()
         m = Mapper(basedir)
         m.add_data(self.data)

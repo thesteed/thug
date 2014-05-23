@@ -17,8 +17,31 @@
 # MA  02111-1307  USA
 
 
+import sys
+import os
 import logging
 log = logging.getLogger("Thug")
+
+import hashlib
+import zipfile
+import rarfile
+
+try:
+    from cStringIO import StringIO
+except:
+    from StringIO import StringIO
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+
+from peepdf.PDFCore import PDFParser, vulnsDict
+from datetime import datetime
+from lxml import etree
+
+from androguard.core import androconf
+from androguard.core.bytecodes import apk
+from androguard.core.bytecodes import dvm
+from androguard.core.analysis import analysis
+
 
 class MIMEHandler(dict):
     """
@@ -115,6 +138,7 @@ class MIMEHandler(dict):
                  "application/x-sh",
                  "application/x-shar",
                  "application/x-shockwave-flash",
+                 "application/x-silverlight-2",
                  "application/x-stuffit",
                  "application/x-sv4cpio",
                  "application/x-sv4crc",
@@ -197,17 +221,459 @@ class MIMEHandler(dict):
         for mimetype in self.mimetypes:
             self[mimetype] = self.passthrough
 
+        self.handlers = list()
+
         self.register_empty_handlers()
+        self.register_fallback_handlers()
+        self.register_zip_handlers()
+        self.register_rar_handlers()
+        self.register_pdf_handlers()
+        self.register_android_handlers()
 
     def register_empty_handlers(self):
         self['application/javascript']   = None
         self['application/x-javascript'] = None
         self['text/css']                 = None
         self['text/html']                = None
-        self['text/plain']               = None
+        #self['text/plain']              = None
         self['text/javascript']          = None
 
-    def passthrough(self, data):
+    def register_fallback_handlers(self):
+        self['text/plain'] = self.handle_fallback
+
+    def register_handler(self, mimetype, handler):
+        self[mimetype] = handler
+        self.handlers.append(handler)
+
+    def register_zip_handlers(self):
+        self.register_handler('application/zip', self.handle_zip)
+
+    def register_rar_handlers(self):
+        self.register_handler('application/x-rar-compressed', self.handle_rar)
+
+    def register_pdf_handlers(self):
+        self.register_handler('application/pdf', self.handle_pdf)
+
+    def register_android_handlers(self):
+        self['application/vnd.android.package-archive'] = self.handle_android
+
+    def handle_fallback(self, url, content):
+        for handler in self.handlers:
+            if handler(url, content):
+                return True
+
+        return False
+
+    def handle_zip(self, url, content):
+        fp = StringIO(content)
+        if not zipfile.is_zipfile(fp):
+            return False
+
+        try:
+            zipdata = zipfile.ZipFile(fp)
+        except:
+            return False
+
+        for filename in zipdata.namelist():
+            try:
+                data = zipdata.read(filename)
+            except:
+                continue
+
+            sample = log.ThugLogging.log_file(data)
+            if sample is None:
+                continue
+
+            try:
+                md5 = sample['md5']
+            except:
+                continue
+            
+
+            unzipped = os.path.join(log.ThugLogging.baseDir, 'unzipped')
+            try:
+                os.makedirs(unzipped)
+            except:
+                pass
+
+            sample_name = os.path.join(unzipped, md5, )
+            with open(sample_name, 'wb') as fd:
+                fd.write(data)
+
+        return True
+
+    def handle_rar(self, url, content):
+        unzipped = os.path.join(log.ThugLogging.baseDir, 'unzipped')
+        try:
+            os.makedirs(unzipped)
+        except:
+            pass
+
+        m = hashlib.md5()
+        m.update(content)
+        md5sum = m.hexdigest()
+        rfile = os.path.join(unzipped, "%s.rar" % (md5sum, ))
+        with open(rfile, 'wb') as fd:
+            fd.write(content)
+
+        try:
+            rardata = rarfile.RarFile(rfile)
+        except:
+            os.remove(rfile)
+            return False
+
+        for filename in rardata.namelist():
+            try:
+                data = rardata.read(filename)
+            except:
+                continue
+
+            sample = log.ThugLogging.log_file(data)
+            if sample is None:
+                continue
+
+            try:
+                md5 = sample['md5']
+            except:
+                continue
+
+            sample_name = os.path.join(unzipped, md5, )
+            with open(sample_name, 'wb') as fd:
+                fd.write(data)
+
+        os.remove(rfile)
+        return True
+      
+    def getPeepXML(self, statsDict, url):
+        """
+            Slightly modified version of Peepdf getPeepXML function
+        """
+
+        root              = etree.Element('peepdf_analysis', 
+                                          url    = 'http://peepdf.eternal-todo.com', 
+                                          author = 'Jose Miguel Esparza')
+
+        analysisDate      = etree.SubElement(root, 'date')
+        analysisDate.text = datetime.today().strftime('%Y-%m-%d %H:%M')
+        basicInfo         = etree.SubElement(root, 'basic')
+        fileName          = etree.SubElement(basicInfo, 'filename')
+        fileName.text     = statsDict['File']
+        md5               = etree.SubElement(basicInfo, 'md5')
+        md5.text          = statsDict['MD5']
+        sha1              = etree.SubElement(basicInfo, 'sha1')
+        sha1.text         = statsDict['SHA1']
+        sha256            = etree.SubElement(basicInfo, 'sha256')
+        sha256.text       = statsDict['SHA256']
+        size              = etree.SubElement(basicInfo, 'size')
+        size.text         = statsDict['Size']
+        detection         = etree.SubElement(basicInfo, 'detection')
+
+        if statsDict['Detection'] != [] and statsDict['Detection'] != None:
+            detectionRate        = etree.SubElement(detection, 'rate')
+            detectionRate.text   = '%d/%d' % (statsDict['Detection'][0], statsDict['Detection'][1])
+            detectionReport      = etree.SubElement(detection, 'report_link')
+            detectionReport.text = statsDict['Detection report']
+
+        version      = etree.SubElement(basicInfo, 'pdf_version')
+        version.text = statsDict['Version']
+        binary       = etree.SubElement(basicInfo, 'binary', status = statsDict['Binary'].lower())
+        linearized   = etree.SubElement(basicInfo, 'linearized', status = statsDict['Linearized'].lower())
+        encrypted    = etree.SubElement(basicInfo, 'encrypted', status = statsDict['Encrypted'].lower())
+
+        if statsDict['Encryption Algorithms'] != []:
+            algorithms = etree.SubElement(encrypted, 'algorithms')
+            for algorithmInfo in statsDict['Encryption Algorithms']:
+                algorithm      = etree.SubElement(algorithms, 'algorithm', bits = str(algorithmInfo[1]))
+                algorithm.text = algorithmInfo[0]
+
+        updates       = etree.SubElement(basicInfo, 'updates')
+        updates.text  = statsDict['Updates']
+        objects       = etree.SubElement(basicInfo, 'num_objects')
+        objects.text  = statsDict['Objects']
+        streams       = etree.SubElement(basicInfo, 'num_streams')
+        streams.text  = statsDict['Streams']
+        comments      = etree.SubElement(basicInfo, 'comments')
+        comments.text = statsDict['Comments']
+        errors        = etree.SubElement(basicInfo, 'errors', num = str(len(statsDict['Errors'])))
+
+        for error in statsDict['Errors']:
+            errorMessageXML      = etree.SubElement(errors, 'error_message')
+            errorMessageXML.text = error
+
+        advancedInfo = etree.SubElement(root, 'advanced')
+
+        for version in range(len(statsDict['Versions'])):
+            statsVersion = statsDict['Versions'][version]
+            if version == 0:
+                versionType = 'original'
+            else:
+                versionType = 'update'
+
+            versionInfo = etree.SubElement(advancedInfo, 'version', num = str(version), type = versionType)
+            catalog     = etree.SubElement(versionInfo, 'catalog')
+
+            if statsVersion['Catalog']:
+                catalog.set('object_id', statsVersion['Catalog'])
+            
+            info = etree.SubElement(versionInfo, 'info')
+            if statsVersion['Info']:
+                info.set('object_id', statsVersion['Info'])
+            
+            objects = etree.SubElement(versionInfo, 'objects', num = statsVersion['Objects'][0])
+
+            for id in statsVersion['Objects'][1]:
+                object = etree.SubElement(objects, 'object', id = str(id))
+                
+                if statsVersion['Compressed Objects']:
+                    if id in statsVersion['Compressed Objects'][1]:
+                        object.set('compressed', 'true')
+                    else:
+                        object.set('compressed', 'false')
+                
+                if statsVersion['Errors']:
+                    if id in statsVersion['Errors'][1]:
+                        object.set('errors', 'true')
+                    else:
+                        object.set('errors', 'false')
+            
+            streams = etree.SubElement(versionInfo, 'streams', num = statsVersion['Streams'][0])
+            
+            for id in statsVersion['Streams'][1]:
+                stream = etree.SubElement(streams, 'stream', id = str(id))
+                
+                if statsVersion['Xref Streams']:
+                    if id in statsVersion['Xref Streams'][1]:
+                        stream.set('xref_stream', 'true')
+                    else:
+                        stream.set('xref_stream', 'false')
+                
+                if statsVersion['Object Streams']:
+                    if id in statsVersion['Object Streams'][1]:
+                        stream.set('object_stream', 'true')
+                    else:
+                        stream.set('object_stream', 'false')
+                
+                if statsVersion['Encoded']:
+                    if id in statsVersion['Encoded'][1]:
+                        stream.set('encoded', 'true')
+                        if statsVersion['Decoding Errors']:
+                            if id in statsVersion['Decoding Errors'][1]:
+                                stream.set('decoding_errors', 'true')
+                            else:
+                                stream.set('decoding_errors', 'false')
+                    else:
+                        stream.set('encoded', 'false')
+
+            jsObjects = etree.SubElement(versionInfo, 'js_objects')
+
+            if statsVersion['Objects with JS code']:
+                for id in statsVersion['Objects with JS code'][1]:
+                    etree.SubElement(jsObjects, 'container_object', id = str(id))
+
+            actions    = statsVersion['Actions']
+            events     = statsVersion['Events']
+            vulns      = statsVersion['Vulns']
+            elements   = statsVersion['Elements']
+            suspicious = etree.SubElement(versionInfo, 'suspicious_elements')
+
+            if events or actions or vulns or elements:
+                if events:
+                    triggers = etree.SubElement(suspicious, 'triggers')
+                    for event in events:
+                        trigger = etree.SubElement(triggers, 'trigger', name = event)
+                        for id in events[event]:
+                            log.ThugLogging.log_exploit_event(url,
+                                                              "Adobe Acrobat Reader",
+                                                              "Adobe Acrobat Reader suspicious trigger: %s [object %s]" % (event, id, )
+                                                              ),
+                            etree.SubElement(trigger, 'container_object', id = str(id))
+                if actions:
+                    actionsList = etree.SubElement(suspicious, 'actions')
+                    for action in actions:
+                        actionInfo = etree.SubElement(actionsList, 'action', name = action)
+                        for id in actions[action]:
+                            log.ThugLogging.log_exploit_event(url,
+                                                              "Adobe Acrobat Reader",
+                                                              "Adobe Acrobat Reader suspicious action: %s [object %s]" % (action, id, )
+                                                              ),
+                            etree.SubElement(actionInfo, 'container_object', id = str(id))
+
+                if elements:
+                    elementsList = etree.SubElement(suspicious, 'elements')
+                    for element in elements:
+                        elementInfo = etree.SubElement(elementsList, 'element', name = element)
+                        if element in vulnsDict:
+                            for vulnCVE in vulnsDict[element]:
+                                log.ThugLogging.log_exploit_event(url,
+                                                                  "Adobe Acrobat Reader",
+                                                                  "Adobe Acrobat Reader Exploit (%s)" % (vulnCVE, ),
+                                                                  cve = vulnCVE)
+                                cve = etree.SubElement(elementInfo, 'cve')
+                                cve.text = vulnCVE
+                        for id in elements[element]:
+                            etree.SubElement(elementInfo, 'container_object', id = str(id))
+                if vulns:
+                    vulnsList = etree.SubElement(suspicious, 'js_vulns')
+                    for vuln in vulns:
+                        vulnInfo = etree.SubElement(vulnsList, 'vulnerable_function', name = vuln)
+                        if vulnsDict.has_key(vuln):
+                            for vulnCVE in vulnsDict[vuln]:
+                                log.ThugLogging.log_exploit_event(url, 
+                                                                  "Adobe Acrobat Reader",
+                                                                  "Adobe Acrobat Reader Exploit (%s)" % (vulnCVE, ), 
+                                                                  cve = vulnCVE)
+                                cve = etree.SubElement(vulnInfo, 'cve')
+                                cve.text = vulnCVE
+                        for id in vulns[vuln]:
+                            etree.SubElement(vulnInfo, 'container_object', id = str(id))
+            
+            urls           = statsVersion['URLs']
+            suspiciousURLs = etree.SubElement(versionInfo, 'suspicious_urls')
+            
+            if urls:
+                for url in urls:
+                    urlInfo      = etree.SubElement(versionInfo, 'url')
+                    urlInfo.text = url
+
+        return etree.tostring(root, pretty_print = True)
+
+    def handle_pdf(self, url, content):
+        m = hashlib.md5()
+        m.update(content)
+        md5sum = m.hexdigest()
+
+        rfile = os.path.join(log.ThugLogging.baseDir, md5sum)
+        with open(rfile, 'wb') as fd: 
+            fd.write(content)
+
+        pdfparser = PDFParser()
+
+        try:
+            ret, pdf = pdfparser.parse(rfile, forceMode = True, looseMode = True)
+        except:
+            os.remove(rfile)
+            return False
+
+        statsDict = pdf.getStats() 
+        analysis  = self.getPeepXML(statsDict, url)
+
+        pdflogdir = os.path.join(log.ThugLogging.baseDir, "analysis", "pdf")
+        
+        try:
+            os.makedirs(pdflogdir)
+        except:
+            pass
+
+        report = os.path.join(pdflogdir, "%s.xml" % (statsDict["MD5"], ))
+        with open(report, 'wb') as fd:
+            fd.write(analysis)
+
+        os.remove(rfile)
+        return True
+
+    def do_build_apk_report(self, a):
+        output = StringIO()
+
+        a.get_files_types()
+
+        output.write("[FILES] \n")
+        for i in a.get_files():
+            try: 
+                output.write("\t%s %s %x\n" % (i, a.files[i], a.files_crc32[i], ))
+            except KeyError:
+                output.write("\t%s %x\n" % (i, a.files_crc32[i], ))
+
+        output.write("\n[PERMISSIONS] \n")
+        details_permissions = a.get_details_permissions()
+        for i in details_permissions:
+            output.write("\t%s %s\n" % (i, details_permissions[i], ))
+
+        output.write("\n[MAIN ACTIVITY]\n\t%s\n" % (a.get_main_activity(), ))
+
+        output.write("\n[ACTIVITIES] \n")
+        activities = a.get_activities()
+        for i in activities:
+            filters = a.get_intent_filters("activity", i)
+            output.write("\t%s %s\n" % (i, filters or "", ))
+
+        output.write("\n[SERVICES] \n")
+        services = a.get_services()
+        for i in services:
+            filters = a.get_intent_filters("service", i)
+            output.write("\t%s %s\n" % (i, filters or "", ))
+
+        output.write("\n[RECEIVERS] \n")
+        receivers = a.get_receivers()
+        for i in receivers:
+            filters = a.get_intent_filters("receiver", i)
+            output.write("\t%s %s\n" % (i, filters or "", ))
+
+        output.write("\n[PROVIDERS]\n\t%s\n\n" % (a.get_providers(), ))
+
+        vm  = dvm.DalvikVMFormat(a.get_dex())
+        vmx = analysis.uVMAnalysis(vm)
+
+        output.write("Native code      : %s\n"   % (analysis.is_native_code(vmx), ))
+        output.write("Dynamic code     : %s\n"   % (analysis.is_dyn_code(vmx), ))
+        output.write("Reflection code  : %s\n"   % (analysis.is_reflection_code(vmx), ))
+        output.write("ASCII Obfuscation: %s\n\n" % (analysis.is_ascii_obfuscation(vm), ))
+
+        for i in vmx.get_methods():
+            i.create_tags()
+            if not i.tags.empty():
+                output.write("%s %s %s\n" % (i.method.get_class_name(),
+                                             i.method.get_name(),
+                                             i.tags, ))
+
+        return output
+
+    def save_apk_report(self, url, md5, output):
+        apklogdir = os.path.join(log.ThugLogging.baseDir, "analysis", "apk")
+    
+        try:
+            os.makedirs(apklogdir)
+        except:
+            pass
+
+        report = os.path.join(apklogdir, md5)
+        with open(report, 'wb') as fd: 
+            fd.write(output.getvalue())
+
+        log.warning("[APK] URL: %s MD5: %s Androguard analysis: %s" % (url, md5, report, ))
+
+    def build_apk_report(self, url, a, md5sum):
+        output = self.do_build_apk_report(a)
+        self.save_apk_report(url, md5sum, output)
+
+    def handle_android(self, url, content):
+        ret = False
+
+        m = hashlib.md5()
+        m.update(content)
+        md5sum = m.hexdigest()
+
+        rfile = os.path.join(log.ThugLogging.baseDir, md5sum)
+        with open(rfile, 'wb') as fd: 
+            fd.write(content)
+
+        ret_type = androconf.is_android(rfile)
+
+        if ret_type not in ("APK", ):
+            os.remove(rfile)
+            return ret
+
+        try :
+            a = apk.APK(rfile, zipmodule = 2)
+            if a.is_valid_APK():
+                self.build_apk_report(url, a, md5sum)
+                ret = True
+        except:
+            pass
+
+        os.remove(rfile)
+        return ret
+
+    def passthrough(self, url, data):
         """
         The method passthrough is the default handler associated to
         almost all Content-Types with the few exceptions defined in
