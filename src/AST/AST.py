@@ -20,6 +20,7 @@ import logging
 import PyV8
 import json
 import chardet
+import traceback
 
 log = logging.getLogger("Thug")
 
@@ -112,9 +113,9 @@ class AST(object):
         self.debug("[*] Expression Statement")
         self.debug("\tStatement:          %s" % (stmt, ))
         self.debug("\tStatement type:     %s" % (stmt.type, ))
-        self.debug("\tStatement position: %s" % (stmt.pos, ))
+        self.debug("\tStatement position: %s" % (stmt.expression.pos, ))
 
-        self.checkExitingLoop(stmt.pos)
+        self.checkExitingLoop(stmt.expression.pos)
         stmt.expression.visit(self)
         if self.assignStatement:
             if self.inBlock:
@@ -123,9 +124,10 @@ class AST(object):
                 try:
                     pos = stmt.expression.pos
                 except:
+                    traceback.print_exc()
                     return
             else:
-                pos = stmt.pos
+                pos = stmt.expression.pos
                 
             self.breakpoints.add((self.AssignBreakPoint, pos))
             self.assignStatement = False
@@ -149,12 +151,14 @@ class AST(object):
         if decl.scope.isGlobal:
             getattr(self.window, f.name, None)
 
-        for decl in decl.scope.declarations:
-            if not getattr(decl, 'function', None):
+        for d in decl.scope.declarations:
+            if not getattr(d, 'function', None):
                 continue
 
-            for stmt in decl.function.body:
-                stmt.visit(self)
+            d.function.visit(self)
+
+            #for stmt in d.function.body:
+            #    stmt.visit(self)
 
     def onAssignment(self, expr):
         self.debug("[*] Assignment Statement")
@@ -314,8 +318,7 @@ class AST(object):
 
     def onCountOperation(self, stmt):
         self.debug("[*] Count Operation:    %s" % (stmt.op, ))
-        
         stmt.expression.visit(self)
 
     def onVariableProxy(self, expr):
-        pass
+        self.debug("\tVariable:       %s" % (expr, ))

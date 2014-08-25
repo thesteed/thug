@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# JSONLog.py
+# JSON.py
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -32,7 +32,7 @@ from .compatibility import *
 log = logging.getLogger("Thug")
 
 
-class JSONLog(object):
+class JSON(object):
     def __init__(self, thug_version):
         self._tools = ({
                         'id'          : 'json-log',
@@ -110,8 +110,7 @@ class JSONLog(object):
         self.data["url"] = self.fix(url)
 
     def add_code_snippet(self, snippet, language, relationship, method = "Dynamic Analysis"):
-        return  # Turned off. We first want files and connections
-
+        #return  # Turned off. We first want files and connections
         self.data["code"].append({"snippet"      : self.fix(snippet),
                                   "language"     : self.fix(language),
                                   "relationship" : self.fix(relationship),
@@ -193,13 +192,19 @@ class JSONLog(object):
         self.data["files"].append(data)
 
     def export(self, basedir):
-        report = codecs.open(os.path.join(basedir, "analysis.json"),
+        logdir = os.path.join(basedir, "analysis", "json")
+        try:
+            os.makedirs(logdir)
+        except:
+            pass
+
+        report = codecs.open(os.path.join(logdir, "analysis.json"),
                              "w", 
                              errors='ignore', 
                              encoding = 'utf-8')
 
         json.dump(self.data, report, ensure_ascii = False, encoding = "utf-8", sort_keys = False, indent = 4)
         report.close()
-        m = Mapper(basedir)
+        m = Mapper(logdir)
         m.add_data(self.data)
         m.write_svg()

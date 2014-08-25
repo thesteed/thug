@@ -16,6 +16,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 # MA  02111-1307  USA
 
+import os
 import sys
 import logging
 import datetime
@@ -39,6 +40,7 @@ class MAEC11(object):
         self.associated_code = None
         self.object_pool     = None
         self.signatures      = list()
+        self.cached_data     = None
 
         self.init_tools_used() 
         self.create_maec_bundle()
@@ -253,10 +255,30 @@ class MAEC11(object):
     def log_file(self, data):
         self.add_object(data)
 
-    def export(self, outfile = sys.stdout):
-        self.maec_bundle.export(outfile, 
-                                0, 
-                                name_         = 'MAEC_Bundle',
-                                namespace_    = '',
-                                namespacedef_ = NAMESPACEDEF_)
+    def export(self, basedir):
+        logdir = os.path.join(basedir, "analysis", "maec11")
 
+        try:
+            os.makedirs(logdir)
+        except:
+            pass
+
+        with open(os.path.join(logdir, 'analysis.xml'), 'a+r') as fd:
+            self.maec_bundle.export(fd, 
+                                    0, 
+                                    name_         = 'MAEC_Bundle',
+                                    namespace_    = '',
+                                    namespacedef_ = NAMESPACEDEF_)
+            fd.seek(0)
+            self.cached_data = fd.read()
+
+    def get_data(self, basedir):
+        if self.cached_data:
+            return self.cached_data
+
+        logdir = os.path.join(basedir, "analysis", "maec11")
+        with open(os.path.join(logdir, 'analysis.xml'), 'r') as fd:
+            data = fd.read()
+        
+        self.cached_data = data
+        return data

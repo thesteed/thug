@@ -31,6 +31,8 @@ try:
 except:
     from StringIO import StringIO
 
+import bs4 as BeautifulSoup
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 from peepdf.PDFCore import PDFParser, vulnsDict
@@ -113,6 +115,7 @@ class MIMEHandler(dict):
                  "application/x-hdf",
                  "application/x-internet-signup",
                  "application/x-iphone",
+                 "application/x-java-jnlp-file",
                  "application/x-javascript",
                  "application/x-latex",
                  "application/x-msaccess",
@@ -229,6 +232,7 @@ class MIMEHandler(dict):
         self.register_rar_handlers()
         self.register_pdf_handlers()
         self.register_android_handlers()
+        self.register_java_jnlp_handlers()
 
     def register_empty_handlers(self):
         self['application/javascript']   = None
@@ -256,6 +260,9 @@ class MIMEHandler(dict):
 
     def register_android_handlers(self):
         self['application/vnd.android.package-archive'] = self.handle_android
+
+    def register_java_jnlp_handlers(self):
+        self['application/x-java-jnlp-file'] = self.handle_java_jnlp
 
     def handle_fallback(self, url, content):
         for handler in self.handlers:
@@ -288,7 +295,6 @@ class MIMEHandler(dict):
                 md5 = sample['md5']
             except:
                 continue
-            
 
             unzipped = os.path.join(log.ThugLogging.baseDir, 'unzipped')
             try:
@@ -504,6 +510,9 @@ class MIMEHandler(dict):
                         elementInfo = etree.SubElement(elementsList, 'element', name = element)
                         if element in vulnsDict:
                             for vulnCVE in vulnsDict[element]:
+                                if isinstance(vulnCVE, (list, tuple)):
+                                    vulnCVE=",".join(vulnCVE)
+
                                 log.ThugLogging.log_exploit_event(url,
                                                                   "Adobe Acrobat Reader",
                                                                   "Adobe Acrobat Reader Exploit (%s)" % (vulnCVE, ),
@@ -518,6 +527,9 @@ class MIMEHandler(dict):
                         vulnInfo = etree.SubElement(vulnsList, 'vulnerable_function', name = vuln)
                         if vulnsDict.has_key(vuln):
                             for vulnCVE in vulnsDict[vuln]:
+                                if isinstance(vulnCVE, (list, tuple)):
+                                    vulnCVE=",".join(vulnCVE)
+
                                 log.ThugLogging.log_exploit_event(url, 
                                                                   "Adobe Acrobat Reader",
                                                                   "Adobe Acrobat Reader Exploit (%s)" % (vulnCVE, ), 
@@ -536,6 +548,49 @@ class MIMEHandler(dict):
                     urlInfo.text = url
 
         return etree.tostring(root, pretty_print = True)
+
+    def swf_mastah(self, pdf, statsDict):
+        """
+            This code is taken from SWF Mastah by Brandon Dixon
+        """
+        swfdir = os.path.join(log.ThugLogging.baseDir, 'dropped', 'swf')
+        count  = 0
+
+        for version in range(len(statsDict['Versions'])):
+            body = pdf.body[count]
+            objs = body.objects
+
+            for index in objs:
+                oid     = objs[index].id
+                offset  = objs[index].offset
+                size    = objs[index].size
+                details = objs[index].object
+
+                if details.type in ("stream", ):
+                    encoded_stream = details.encodedStream
+                    decoded_stream = details.decodedStream
+                    header         = decoded_stream[:3]
+                    is_flash       = [s for s in objs if header in ("CWS", "FWS")]
+
+                    if is_flash:
+                        try:
+                            os.makedirs(swfdir)
+                        except:
+                            pass
+
+                        data = decoded_stream.strip()
+
+                        m = hashlib.md5()
+                        m.update(data)
+                        md5sum = m.hexdigest()
+
+                        swf = os.path.join(swfdir, "%s.swf" % (md5sum, ))
+                        with open(swf, 'wb') as fd:
+                            fd.write(data)
+
+                        log.warning("[PDF] Embedded SWF %s extracted from PDF %s" % (md5sum, statsDict["MD5"], ))
+
+            count += 1
 
     def handle_pdf(self, url, content):
         m = hashlib.md5()
@@ -567,6 +622,8 @@ class MIMEHandler(dict):
         report = os.path.join(pdflogdir, "%s.xml" % (statsDict["MD5"], ))
         with open(report, 'wb') as fd:
             fd.write(analysis)
+
+        self.swf_mastah(pdf, statsDict)
 
         os.remove(rfile)
         return True
@@ -672,6 +729,45 @@ class MIMEHandler(dict):
 
         os.remove(rfile)
         return ret
+
+    @property
+    def javaWebStartUserAgent(self):
+        javaplugin = log.ThugVulnModules._javaplugin.split('.')
+        last = javaplugin.pop()
+        version =  '%s_%s' % ('.'.join(javaplugin), last)
+        return "JNLP/6.0 javaws/%s (b04) Java/%s" % (version, version, )
+
+    def handle_java_jnlp(self, url, data):
+        headers = dict()
+        headers['Connection'] = 'keep-alive'
+
+        try:
+            soup = BeautifulSoup.BeautifulSoup(data, "lxml")
+        except:
+            return
+
+        jnlp = soup.find("jnlp")
+        if jnlp is None:
+            return
+
+        codebase = jnlp.attrs['codebase'] if 'codebase' in jnlp.attrs else ''
+
+        log.ThugLogging.add_behavior_warn(description = '[JNLP Detected]', method = 'Dynamic Analysis')
+
+        jars = soup.find_all("jar")
+        if not jars:
+            return
+
+        headers['User-Agent'] = self.javaWebStartUserAgent
+
+        for jar in jars:
+            try:
+                url = "%s%s" % (codebase, jar.attrs['href'], )
+                response, content = self.window._navigator.fetch(url,
+                                                                 headers = headers,
+                                                                 redirect_type = "JNLP")
+            except:
+                pass
 
     def passthrough(self, url, data):
         """

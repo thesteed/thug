@@ -26,8 +26,11 @@ except ImportError:
 
 log = logging.getLogger("Thug")
 
+
 class MongoDB(object):
-    def __init__(self):
+    formats = ('maec11', )
+
+    def __init__(self, thug_version):
         self.urls    = None
         self.events  = None
         self.samples = None
@@ -35,11 +38,11 @@ class MongoDB(object):
         self.opts    = dict()
 
         config    = ConfigParser.ConfigParser()
-        conf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logging.conf")
+        conf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "logging.conf")
         config.read(conf_file)
         
-        for option in config.options('MongoDB'):
-            self.opts[option] = config.get('MongoDB', option)
+        for option in config.options('mongodb'):
+            self.opts[option] = config.get('mongodb', option)
 
         if self.opts['enable'].lower() in ('false', ):
             return
@@ -81,7 +84,7 @@ class MongoDB(object):
         _data['sha1']      = data['sha1']
         self.samples.insert(_data)
 
-    def log_event(self, data):
+    def __log_event(self, data):
         if not self.events:
             return
 
@@ -92,3 +95,19 @@ class MongoDB(object):
         _data['url_id']   = self.url_id
         _data['event_id'] = fp._id
         self.events.insert(_data)
+
+    def log_event(self, basedir):
+        m = None
+
+        for module in self.formats:
+            if module in log.ThugLogging.modules:
+                p = log.ThugLogging.modules[module]
+                m = getattr(p, 'get_data', None)
+                if m:
+                    break
+
+        if m is None:
+            return
+
+        data = m(basedir)
+        self.__log_event(data)

@@ -552,10 +552,10 @@ class Personality(dict):
                 "id"              : 25, 
                 "description"     : "Chrome 33.0.1750.21\t(iPad, iOS 7.1)",
                 "version"         : "33.0.1750.21",
-                "userAgent"       : "Mozilla/5.0 (iPad; CPU OS 7_1 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) CriOS/33.0.1750.21 Mobile/11D167 Safari/9537.53 (7C45F3C7-DC11-40F0-9B5B-AA4A771C0904",
+                "userAgent"       : "Mozilla/5.0 (iPad; CPU OS 7_1 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) CriOS/33.0.1750.21 Mobile/11D167 Safari/9537.53 (7C45F3C7-DC11-40F0-9B5B-AA4A771C0904)",
                 "appCodeName"     : "Mozilla",
                 "appName"         : "Netscape",
-                "appVersion"      : "5.0 (iPad; CPU OS 7_1 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) CriOS/33.0.1750.21 Mobile/11D167 Safari/9537.53 (7C45F3C7-DC11-40F0-9B5B-AA4A771C0904",
+                "appVersion"      : "5.0 (iPad; CPU OS 7_1 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) CriOS/33.0.1750.21 Mobile/11D167 Safari/9537.53 (7C45F3C7-DC11-40F0-9B5B-AA4A771C0904)",
                 "appMinorVersion" : None,
                 "platform"        : "iPad",
                 "product"         : "Gecko",
@@ -568,6 +568,27 @@ class Personality(dict):
                 "cc_on"           : None,
                 "browserTag"      : "chrome33",
                 } 
+
+        self['ipadchrome35'] = {
+                "id"              : 26,
+                "description"     : "Chrome 35.0.1916.41\t(iPad, iOS 7.1.1)",
+                "version"         : "35.0.1916.41",
+                "userAgent"       : "Mozilla/5.0 (iPad; CPU OS 7_1_1 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) CriOS/35.0.1916.41 Mobile/11D201 Safari/9537.53 (000125)",
+                "appCodeName"     : "Mozilla",
+                "appName"         : "Netscape",
+                "appVersion"      : "5.0 (iPad; CPU OS 7_1_1 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) CriOS/35.0.1916.41 Mobile/11D201 Safari/9537.53 (000125)",
+                "appMinorVersion" : None,
+                "platform"        : "iPad",
+                "product"         : "Gecko",
+                "productSub"      : "20030107",
+                "vendor"          : "Apple Computer, Inc.",
+                "vendorSub"       : "",
+                "oscpu"           : None,
+                "buildID"         : None,
+                "javaUserAgent"   : None,
+                "cc_on"           : None,
+                "browserTag"      : "chrome35",
+                }
 
     @property
     def userAgent(self):

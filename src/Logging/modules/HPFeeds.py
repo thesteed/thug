@@ -58,13 +58,15 @@ class FeedUnpack(object):
 
 
 class HPFeeds(object):
+    formats = ('maec11', )
+
     OP_ERROR        = 0 
     OP_INFO         = 1 
     OP_AUTH         = 2 
     OP_PUBLISH      = 3 
     OP_SUBSCRIBE    = 4
 
-    def __init__(self):
+    def __init__(self, thug_version):
         self.unpacker = FeedUnpack()
         self.opts     = dict()
         self.url      = ""
@@ -73,11 +75,11 @@ class HPFeeds(object):
     def __init_config(self):
         config = ConfigParser.ConfigParser()
 
-        conf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.conf')
+        conf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, 'logging.conf')
         config.read(conf_file)
         
-        for option in config.options('HPFeeds'):
-            self.opts[option] = config.get('HPFeeds', option)
+        for option in config.options('hpfeeds'):
+            self.opts[option] = config.get('hpfeeds', option)
 
     def set_url(self, url):
         self.url = url
@@ -149,13 +151,7 @@ class HPFeeds(object):
             except socket.timeout:
                 break
 
-    def log_event(self, pubdata):
-        if self.opts['enable'].lower() in ('false', ):
-            return
-
-        if log.ThugOpts.local:
-            return
-
+    def __log_event(self, pubdata):
         self.sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         data = self.get_data(self.opts['host'], int(self.opts['port']))
         if data is None:
@@ -164,10 +160,26 @@ class HPFeeds(object):
         self.publish_data(data, 'thug.events', pubdata)
         self.sockfd.close()
 
-    def log_file(self, pubdata):
-        if self.opts['enable'].lower() in ('false', ):
+    def log_event(self, basedir):
+        if log.ThugOpts.local:
             return
 
+        m = None
+
+        for module in self.formats:
+            if module in log.ThugLogging.modules:
+                p = log.ThugLogging.modules[module]
+                m = getattr(p, 'get_data', None)
+                if m:
+                    break
+
+        if m is None:
+            return
+
+        data = m(basedir)
+        self.__log_event(data)
+
+    def log_file(self, pubdata):
         if log.ThugOpts.local:
             return
 
@@ -180,9 +192,6 @@ class HPFeeds(object):
         self.sockfd.close()
 
     def log_warning(self, pubdata):
-        if self.opts['enable'].lower() in ('false', ):
-            return
-
         if log.ThugOpts.local:
             return
 
